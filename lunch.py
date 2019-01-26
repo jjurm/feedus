@@ -10,7 +10,6 @@ class Restaurant:
 
 
 class Lunch:
-    uuid = uuid.uuid4()
     meal_preferences = []
     restaurant_type_preferences = []
 
@@ -18,6 +17,7 @@ class Lunch:
 
     def __init__(self, location):
         self.location = location
+        self.uuid = uuid.uuid4()
 
     def fetch_restaurants(self):
         pass
