@@ -16,9 +16,8 @@ class Lunch:
 
     restaurants = None  # Fetch restaurants as a list
 
-    def __init__(self, location, date):
+    def __init__(self, location):
         self.location = location
 
     def fetch_restaurants(self):
         pass
-
