@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_file, send_from_directory
 from flask.json import jsonify
 from flask_socketio import SocketIO, emit
 
@@ -9,25 +9,41 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 lunches = {}
 
+WS_NAMESPACE = "/ws"
+
 
 @app.route('/')
 def hello_world():
     return 'Hello World!'
 
 
-@app.route('/new')
+@app.route('/new', methods=['GET', 'POST'])
 def new_lunch():
     lunch = Lunch(OFFICE_LOCATION)
     lunches[lunch.uuid] = lunch
 
     lunch.fetch_restaurants()
 
-    url = "https://feed.us/" + str(lunch.uuid)
+    url = "https://feedus.hackkosice.com/lunch/" + str(lunch.uuid)
 
     response = {
-        "text": url
+        "attachments": [
+            {
+                "title": "Click here to vote for today's lunch!",
+                "title_link": url
+            }
+        ]
     }
     return jsonify(response)
+
+
+@app.route('/lunch/<lunch_id>')
+def get_lunch(lunch_id):
+    lunch = lunches[lunch_id]
+    # TODO @Pali implement this
+    # use methods send_file, send_from_directory
+    return "Hurray! You are accessing lunch created at " + time.strftime('%a, %d %b %Y %H:%M:%S GMT',
+                                                                         time.gmtime(lunch.created_timestamp))
 
 
 # ===== Server -> Client =====
@@ -46,7 +62,7 @@ def send_chosen_restaurant(lunch, broadcast):
 
 # ===== Client -> Server =====
 
-@socketio.on('get_lunch')
+@socketio.on('get_lunch', namespace=WS_NAMESPACE)
 def on_get_lunch(message):
     lunch = lunches[message]
     if lunch.chosen_restaurant is None:
@@ -55,7 +71,7 @@ def on_get_lunch(message):
         send_chosen_restaurant(lunch, broadcast=False)
 
 
-@socketio.on('vote')
+@socketio.on('vote', namespace=WS_NAMESPACE)
 def on_vote(message):
     '''
     message:
@@ -70,7 +86,7 @@ def on_vote(message):
     send_restaurants(lunch)
 
 
-@socketio.on('eat')
+@socketio.on('eat', namespace=WS_NAMESPACE)
 def on_eat(message):
     '''
     {
@@ -93,4 +109,4 @@ def add_headers(r):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0')

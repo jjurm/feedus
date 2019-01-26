@@ -1,5 +1,5 @@
 import uuid
-
+import time
 
 class Meal:
     def __init__(self, name, type, category):
@@ -33,6 +33,7 @@ class Lunch:
     def __init__(self, location):
         self.location = location
         self.uuid = str(uuid.uuid4())
+        self.created_timestamp = time.time()
 
     def fetch_restaurants(self):
         # TODO @Miso implement this
