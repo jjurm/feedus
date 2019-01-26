@@ -5,7 +5,7 @@ from flask_socketio import SocketIO, emit
 from lunch import *
 from constants import *
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 socketio = SocketIO(app)
 lunches = {}
 
