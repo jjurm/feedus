@@ -1,10 +1,10 @@
 from utils import Location
 
-MEAL_PREFERENCES = [
+MEAL_TYPES = [
     "Soup", "Meat", "Salad"
 ]
 
-RESTAURANT_TYPE_PREFERENCES = [
+MEAL_CATEGORIES = [
     "Asian", "Thai", "Slovak", "Indian"
 ]
 
