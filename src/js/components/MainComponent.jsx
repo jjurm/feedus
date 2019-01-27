@@ -14,7 +14,8 @@ import indian from "./../../img/indian.svg";
 import french from "./../../img/french.svg";
 import italian from "./../../img/italian.svg";
 import fast from "./../../img/fast.svg";
-import british from "./../../img/british.svg";  
+import british from "./../../img/british.svg";
+import openSocket from 'socket.io-client';
 
 class MainComponent extends Component {
   constructor() {
@@ -77,6 +78,16 @@ class MainComponent extends Component {
     ]
     
     };
+
+    const socket = openSocket('https://' + document.domain + ':' + location.port + '/ws');
+    socket.on('connect', function(msg) {
+        console.log("socket connected!")
+    });
+    socket.on('menus', function (json){
+
+    });
+    this.lunch_id = location.pathname.slice(7);
+    this.socket = socket;
   }
 
   onItemSelected = (optionsName, itemName) => {
@@ -94,6 +105,18 @@ class MainComponent extends Component {
     if(submitName == "submitInitial") {
         console.log("Initial submission");
         console.log(this.state);
+        var types = this.state.foodTypeItems
+            .filter(function(type){return type.active})
+            .map(function(type){return type.name});
+        var cuisines = this.state.foodCuisineItems
+            .filter(function(cuisine){return cuisine.active})
+            .map(function(cuisine){return cuisine.name});
+        var response = {
+            lunch: this.lunch_id,
+            types: types,
+            cuisines: cuisines
+        };
+        this.socket.emit('get_pref_lunch', response)
     }
   }
 
@@ -132,13 +155,14 @@ class MainComponent extends Component {
   
   render() {
     return (
-        <BrowserRouter>
-            <Switch>
-                    <Route exact path="/" component={this.Basic} />
-                    <Route path="/vote" component={this.Vote} />
-                    <Route path="/final" component={this.Final} />
-            </Switch>
-        </BrowserRouter>
+        <div>
+            <HeaderComponent></HeaderComponent>
+            <QuestionComponent question="What do you fancy?" subtitle="Click multiple options"></QuestionComponent>
+            <BasicOptionsComponent name="foodTypeItems" onItemSelected={this.onItemSelected} items={this.state.foodTypeItems}></BasicOptionsComponent>
+            <QuestionComponent question="What cuisine do you like?" subtitle="Click multiple options"></QuestionComponent>
+            <BasicOptionsComponent name="foodCuisineItems" onItemSelected={this.onItemSelected} items={this.state.foodCuisineItems}></BasicOptionsComponent>
+            <SubmitComponent name="submitInitial" onSubmit={this.onSubmit}></SubmitComponent>
+        </div>
     );
   }
 }
