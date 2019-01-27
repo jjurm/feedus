@@ -90,13 +90,15 @@ def on_vote(message):
 def on_eat(message):
     '''
     {
-        "lunch": "5d9df401-adc3-4615-bdd0-705d61b2234b"
+        "lunch": "5d9df401-adc3-4615-bdd0-705d61b2234b",
         "restaurant_id": "65138"
+    }
     '''
     lunch = lunches[message.lunch]
     lunch.choose_restaurant(message.restaurant_id)
 
     send_chosen_restaurant(lunch, broadcast=True)
+    # TODO @Zoli Send Slack message
 
 
 @app.after_request
