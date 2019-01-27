@@ -14,7 +14,7 @@ WS_NAMESPACE = "/ws"
 
 @app.route('/')
 def hello_world():
-    return 'Hello World!'
+    return send_file("index.html")
 
 
 @app.route('/new', methods=['GET', 'POST'])
