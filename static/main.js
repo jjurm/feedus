@@ -3,4 +3,7 @@ $(document).ready(function(){
     socket.on('connect', function(msg) {
         console.log("socket connected!")
     });
+    socket.on('menus', function (json){
+
+    })
 });

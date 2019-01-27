@@ -6,22 +6,23 @@ import json
 import googlemaps
 from constants import *
 
-blacklist_categories = ['drink', 'coffee', 'frappuccino', 'breakfast', 'cappucino', 'wine', 'mod', 'side', 'extras', 'fries']
+blacklist_categories = ['drink', 'coffee', 'frappuccino', 'breakfast', 'cappucino', 'wine', 'mod', 'side', 'extras',
+                        'fries']
 blacklist_meals = ['tea', 'coffee', 'latte', 'milk', 'drink']
-
 
 meal_keywords = [
     [
         "salad", "starter", "hors", "appetizer", "snack"
-    ],[
+    ], [
         "soup"
-    ],[
+    ], [
         "sandwich", "wrap", "burger", "bagel", "warm", "beef", "chicken", "turkey", "meal", "main"
-    ],[
+    ], [
         "dessert", "cake"
     ]
 
 ]
+
 
 def category_allowed(category):
     lo = category.lower()
@@ -37,13 +38,7 @@ def meal_allowed(meal):
 def classify_meal(meal, category):
     # TODO @Peto
     # return one of constants.MEAL_TYPES
-    for banned in blacklist_categories:
-        if banned in category:
-            pass
-    for banned in blacklist_meals:
-        if banned in meal:
-            pass
-    for i in [1,2,0,3]:
+    for i in [1, 2, 0, 3]:
         for name in meal_keywords[i]:
             if name in meal or name in category:
                 return MEAL_CATEGORIES[i]
@@ -70,13 +65,12 @@ class Restaurant:
         self.meals = meals
 
     def fetch_distance(self):
-        # TODO @Peto implement this
         client = googlemaps.Client("AIzaSyC2PBhrJSWh1isXPSln1vFbqRPRt6Tr1Rc")
         origin = (OFFICE_LOCATION.latitude, OFFICE_LOCATION.longitude)
-        loc = (self.location.latitude,self.location.longitude)
+        loc = (self.location.latitude, self.location.longitude)
         result = client.distance_matrix(origin, loc, mode="walking")
-        ans=result['rows'][0]['elements']
-        self.distance_mins = max(1,int(ans[0]['duration']['value'])//60)
+        ans = result['rows'][0]['elements']
+        self.distance_mins = max(1, int(ans[0]['duration']['value']) // 60)
         pass
 
 
