@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-npm run build
+#npm run build
 
 export FLASK_APP=app.py
 export FLASK_ENV=development

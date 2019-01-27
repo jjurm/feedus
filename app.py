@@ -1,13 +1,15 @@
-from flask import Flask, send_file, send_from_directory
+from flask import Flask, send_file, send_from_directory, request
 from flask.json import jsonify
 from flask_socketio import SocketIO, emit
 from requests import post
+from htmls import *
+from htmls2 import *
 
 from lunch import *
 from constants import *
 from utils import get_postcode, get_deliveroo_url, ClassJSONEncoder
 
-app = Flask(__name__, static_folder="dist")
+app = Flask(__name__, static_folder="static")
 app.json_encoder = ClassJSONEncoder
 socketio = SocketIO(app)
 lunches = {}
@@ -40,7 +42,7 @@ def new_lunch():
 
     lunch.fetch_restaurants(office_postcode)
 
-    url = "https://feedus.hackkosice.com/lunch-" + str(lunch.uuid)
+    url = "http://feedus.hackkosice.com:5000/lunch-" + str(lunch.uuid)
 
     response = {
         "attachments": [
@@ -60,7 +62,7 @@ def get_lunch(lunch_id):
     lunch = lunches[lunch_id]
     # TODO @Pali implement this
     # use methods send_file, send_from_directory
-    return send_file("dist/index.html")
+    return send_file("static/lunch.html")
 
 
 # ===== Server -> Client =====
@@ -102,11 +104,29 @@ def on_get_lunch(message):
     else:
         send_chosen_restaurant(lunch, broadcast=False)
 
+@app.route('/lunch-<lunch_id>-vote', methods=['GET', 'POST'])
+def on_lunch_vote(lunch_id):
+    message = request.form.to_dict(flat=True)
+    lunch = lunches[lunch_id]
+    meals = lunch.filter_by_preference(message["types"].split("$"), message["cuisines"].split("$"))
+    return lunch2(lunch_id, meals)
+
+@app.route('/lunch-<lunch_id>-restaurants', methods=['GET', 'POST'])
+def on_restaurants(lunch_id):
+    message = request.form.to_dict(flat=True)
+    lunch = lunches[lunch_id]
+    lunch.vote_meals(message["meals"].split("$"))
+
+    rests = lunch.get_restaurants()
+    return restaurants(lunch_id, rests)
+
 
 @socketio.on('get_pref_lunch', namespace=WS_NAMESPACE)
 def on_get_preference_lunch(message):
-    lunch = lunches[message.lunch]
-    emit('menus', lunch.filter_by_preference(message.types, message.cuisines))
+    lunch = lunches[message["lunch"]]
+    print("got lunch "+lunch.uuid)
+    # lunch.filter_by_preference(message["types"], message["cuisines"])
+    emit('menus', "hello")
 
 
 @socketio.on('vote', namespace=WS_NAMESPACE)

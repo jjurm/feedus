@@ -7,16 +7,16 @@ import googlemaps
 from constants import *
 
 blacklist_categories = ['drink', 'coffee', 'frappuccino', 'breakfast', 'cappucino', 'wine', 'mod', 'side', 'extras',
-                        'fries']
-blacklist_meals = ['tea', 'coffee', 'latte', 'milk', 'drink']
+                        'fries', 'sauce', 'chutney']
+blacklist_meals = ['tea', 'coffee', 'latte', 'milk', 'drink', 'plastic', 'abv']
 
 meal_keywords = [
     [
-        "salad", "starter", "hors", "appetizer", "snack"
+        "salad", "starter", "hors", "appetizer", "snack", "fries"
     ], [
         "soup"
     ], [
-        "sandwich", "wrap", "burger", "bagel", "warm", "beef", "chicken", "turkey", "meal", "main"
+        "sandwich", "wrap", "burger", "bagel", "warm", "beef", "chicken", "turkey", "meal", "main", "menu"
     ], [
         "dessert", "cake"
     ]
@@ -55,6 +55,8 @@ def meal_allowed(meal):
 
 
 def classify_meal(meal, category):
+    meal = meal.lower()
+    category = category.lower()
     # TODO @Peto
     # return one of constants.MEAL_TYPES
     for i in [1, 2, 0, 3]:
@@ -104,13 +106,13 @@ class Restaurant:
 
 class Lunch:
     restaurants = []  # Fetch restaurants as a list
-    meal_votes = {}
     chosen_restaurant = None
 
     def __init__(self, location):
         self.location = location
         self.uuid = str(uuid.uuid4())
         self.created_timestamp = time.time()
+        self.meal_votes = {}
 
     def fetch_restaurants(self, postcode):
         postcode_enc = urllib.parse.quote_plus(postcode)
@@ -134,7 +136,7 @@ class Lunch:
 
             categories = {cat["id"]: cat["name"] for cat in data["menu"]["categories"]}
             meals = [
-                Meal(meal["name"], categories[meal["category_id"]])
+                Meal(meal["name"].strip(), categories[meal["category_id"]])
                 for meal in data["menu"]["items"]
                 if category_allowed(categories[meal["category_id"]])
                    and meal_allowed(meal["name"]) and meal["raw_price"] > 0
@@ -166,7 +168,7 @@ class Lunch:
         # - secondarily by the number of meals with maximum number of votes (descending)
 
         def n_votes(meal):
-            return self.meal_votes[meal] or 0
+            return self.meal_votes[meal.name] if meal.name in self.meal_votes else 0
 
         def sortkey(restaurant):
             max_votes = max(n_votes(meal) for meal in restaurant.meals)
@@ -180,4 +182,4 @@ class Lunch:
 
     def filter_by_preference(self, types, cuisines):
         #return [meal for meal in [r.meals for r in self.restaurants if (r.get_cuisine() in cuisines)] if (meal.type in types)]
-        return [meal for r in self.restaurants for meal in r.meals]
+        return [meal.__dict__ for r in self.restaurants for meal in r.meals if classify_meal(meal.name, meal.category) in types]

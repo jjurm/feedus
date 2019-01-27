@@ -79,15 +79,16 @@ class MainComponent extends Component {
     
     };
 
-    const socket = openSocket('https://' + document.domain + ':' + location.port + '/ws');
+    const socket = openSocket('ws://' + document.domain + ':' + location.port + '/ws');
     socket.on('connect', function(msg) {
         console.log("socket connected!")
     });
     socket.on('menus', function (json){
-
+        console.log(json)
     });
     this.lunch_id = location.pathname.slice(7);
     this.socket = socket;
+    window.socket = socket;
   }
 
   onItemSelected = (optionsName, itemName) => {
