@@ -35,7 +35,7 @@ class Lunch:
         self.uuid = str(uuid.uuid4())
         self.created_timestamp = time.time()
 
-    def fetch_restaurants(self):
+    def fetch_restaurants(self, deliveroo_url):
         # TODO @Miso implement this
         self.restaurants = []
         pass

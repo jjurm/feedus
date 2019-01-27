@@ -4,6 +4,7 @@ from flask_socketio import SocketIO, emit
 
 from lunch import *
 from constants import *
+from utils import get_postcode, get_deliveroo_url
 
 app = Flask(__name__, static_folder="static")
 socketio = SocketIO(app)
@@ -11,6 +12,8 @@ lunches = {}
 
 WS_NAMESPACE = "/ws"
 
+office_postcode = get_postcode(OFFICE_LOCATION)
+office_deliveroo_url = get_deliveroo_url(office_postcode)
 
 @app.route('/')
 def hello_world():
@@ -22,7 +25,7 @@ def new_lunch():
     lunch = Lunch(OFFICE_LOCATION)
     lunches[lunch.uuid] = lunch
 
-    lunch.fetch_restaurants()
+    lunch.fetch_restaurants(office_deliveroo_url)
 
     url = "https://feedus.hackkosice.com/lunch/" + str(lunch.uuid)
 
