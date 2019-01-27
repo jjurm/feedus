@@ -6,9 +6,10 @@ from requests import post
 
 from lunch import *
 from constants import *
-from utils import get_postcode, get_deliveroo_url
+from utils import get_postcode, get_deliveroo_url, ClassJSONEncoder
 
 app = Flask(__name__, static_folder="static")
+app.json_encoder = ClassJSONEncoder
 socketio = SocketIO(app)
 lunches = {}
 
@@ -27,7 +28,7 @@ def new_lunch():
     lunch = Lunch(OFFICE_LOCATION)
     lunches[lunch.uuid] = lunch
 
-    lunch.fetch_restaurants(office_deliveroo_url)
+    lunch.fetch_restaurants(office_postcode)
 
     url = "https://feedus.hackkosice.com/lunch/" + str(lunch.uuid)
 
@@ -37,7 +38,8 @@ def new_lunch():
                 "title": "Click here to vote for today's lunch!",
                 "title_link": url
             }
-        ]
+        ],
+        "fetched": lunch.restaurants
     }
 
     resp = post("https://hooks.slack.com/services/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",

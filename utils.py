@@ -2,6 +2,11 @@ import requests
 import json
 
 
+class ClassJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        return o.__dict__
+
+
 class Location:
     def __init__(self, latitude, longitude):
         self.latitude = latitude
@@ -16,6 +21,6 @@ def get_postcode(location):
 
 def get_deliveroo_url(postcode):
     response = requests.post("https://deliveroo.co.uk/api/restaurants",
-                  json={"location": {"post_code": postcode, "confirmed_on_map": False}})
+                             json={"location": {"post_code": postcode, "confirmed_on_map": False}})
     obj = json.loads(response.text)
     return obj["url"]
