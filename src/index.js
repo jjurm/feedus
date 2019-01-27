@@ -1,0 +1,1 @@
+import MainComponent from "./js/components/MainComponent.jsx";
