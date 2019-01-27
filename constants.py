@@ -1,7 +1,7 @@
 from utils import Location
 
 MEAL_TYPES = [
-    "Soup", "Meat", "Salad"
+    "Starter", "Soup", "Main", "Dessert"
 ]
 
 MEAL_CATEGORIES = [
