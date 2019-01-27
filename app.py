@@ -107,7 +107,7 @@ def on_get_lunch(message):
 @socketio.on('get_pref_lunch', namespace=WS_NAMESPACE)
 def on_get_preference_lunch(message):
     lunch = lunches[message.lunch]
-    emit('menus', lunch.filter_by_preference(lunch.types, lunch.cuisines))
+    emit('menus', lunch.filter_by_preference(message.types, message.cuisines))
 
 @socketio.on('vote', namespace=WS_NAMESPACE)
 def on_vote(message):
