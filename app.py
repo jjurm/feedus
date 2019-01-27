@@ -3,12 +3,11 @@ from flask.json import jsonify
 from flask_socketio import SocketIO, emit
 from requests import post
 
-
 from lunch import *
 from constants import *
 from utils import get_postcode, get_deliveroo_url, ClassJSONEncoder
 
-app = Flask(__name__, static_folder="static")
+app = Flask(__name__, static_folder="dist")
 app.json_encoder = ClassJSONEncoder
 socketio = SocketIO(app)
 lunches = {}
@@ -18,9 +17,20 @@ WS_NAMESPACE = "/ws"
 office_postcode = get_postcode(OFFICE_LOCATION)
 office_deliveroo_url = get_deliveroo_url(office_postcode)
 
+
 @app.route('/')
-def hello_world():
-    return send_file("index.html")
+def index():
+    return send_file("dist/index.html")
+
+
+@app.route('/main.js')
+def mainjm():
+    return send_file("dist/main.js")
+
+
+@app.route('/images/<image>')
+def images(image):
+    return send_from_directory('dist/images/', image)
 
 
 @app.route('/new', methods=['GET', 'POST'])
@@ -30,7 +40,7 @@ def new_lunch():
 
     lunch.fetch_restaurants(office_postcode)
 
-    url = "https://feedus.hackkosice.com/lunch/" + str(lunch.uuid)
+    url = "https://feedus.hackkosice.com/lunch-" + str(lunch.uuid)
 
     response = {
         "attachments": [
@@ -42,28 +52,15 @@ def new_lunch():
         "fetched": lunch.restaurants
     }
 
-    resp = post("https://hooks.slack.com/services/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",
-         json={
-             "attachments": [
-            {
-                "title": "Click here to vote for today's lunch!",
-                "title_link": url
-            }
-        ]
-    })
-
-    print(resp)
-
     return jsonify(response)
 
 
-@app.route('/lunch/<lunch_id>')
+@app.route('/lunch-<lunch_id>')
 def get_lunch(lunch_id):
     lunch = lunches[lunch_id]
     # TODO @Pali implement this
     # use methods send_file, send_from_directory
-    return "Hurray! You are accessing lunch created at " + time.strftime('%a, %d %b %Y %H:%M:%S GMT',
-                                                                         time.gmtime(lunch.created_timestamp))
+    return send_file("dist/index.html")
 
 
 # ===== Server -> Client =====
@@ -79,6 +76,7 @@ def send_restaurants(lunch):
 def send_chosen_restaurant(lunch, broadcast):
     emit('chosen', lunch.chosen_restaurant, broadcast=broadcast)
 
+
 def send_slack_notification(lunch):
     post("https://hooks.slack.com/services/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",
          json={
@@ -86,12 +84,12 @@ def send_slack_notification(lunch):
                  {
                      "title": "Great news, today you're going to " + lunch.chosen_restaurant.name,
                      "title_link": "http://maps.google.com/?q="
-                                   +lunch.chosen_restaurant.name
-                                   +"+"+
+                                   + lunch.chosen_restaurant.name
+                                   + "+" +
                                    lunch.chosen_restaurant.postcode
                  }
              ]
-        })
+         })
 
 
 # ===== Client -> Server =====
@@ -103,6 +101,12 @@ def on_get_lunch(message):
         send_menus(lunch)
     else:
         send_chosen_restaurant(lunch, broadcast=False)
+
+
+@socketio.on('get_pref_lunch', namespace=WS_NAMESPACE)
+def on_get_preference_lunch(message):
+    lunch = lunches[message.lunch]
+    emit('menus', lunch.filter_by_preference(message.types, message.cuisines))
 
 
 @socketio.on('vote', namespace=WS_NAMESPACE)

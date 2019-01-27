@@ -23,6 +23,25 @@ meal_keywords = [
 
 ]
 
+cuisine_keywords = [
+    [
+        "asian", "chinese", "sushi", "japan", "thai", "vietnam", "wok"
+    ], [
+        "indian", "curry"
+    ], [
+        "italian", "pizza", "pasta"
+    ], [
+        "french"
+    ], [
+        "british", "brunch",
+    ], [
+        "fast", "burger", "kebab"
+    ]
+
+]
+
+
+
 
 def category_allowed(category):
     lo = category.lower()
@@ -72,7 +91,16 @@ class Restaurant:
         ans = result['rows'][0]['elements']
         self.distance_mins = max(1, int(ans[0]['duration']['value']) // 60)
         pass
-
+    def fetch_cuisine(self):
+       for i in self.tags:
+          tag = i.lower()
+          for j in range(len(MEAL_CATEGORIES)):
+              for keyword in cuisine_keywords[j]:
+                  if keyword in tag:
+                      self.cuisine = MEAL_CATEGORIES[j]
+                      return(self.cuisine)
+       self.cuisine = "British"
+       return("British")
 
 class Lunch:
     restaurants = []  # Fetch restaurants as a list
@@ -149,3 +177,7 @@ class Lunch:
 
     def choose_restaurant(self, restaurant_id):
         self.chosen_restaurant = next(restaurant for restaurant in self.restaurants if restaurant.id == restaurant_id)
+
+    def filter_by_preference(self, types, cuisines):
+        #return [meal for meal in [r.meals for r in self.restaurants if (r.get_cuisine() in cuisines)] if (meal.type in types)]
+        return [meal for r in self.restaurants for meal in r.meals]
