@@ -41,7 +41,7 @@ def new_lunch():
     }
 
     resp = post("https://hooks.slack.com/services/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",
-         data={
+         json={
              "attachments": [
             {
                 "title": "Click here to vote for today's lunch!",
@@ -77,13 +77,19 @@ def send_restaurants(lunch):
 def send_chosen_restaurant(lunch, broadcast):
     emit('chosen', lunch.chosen_restaurant, broadcast=broadcast)
 
-def send_slack_notification(lunch, restaurant):
-    url = "https://feed.us/" + str(lunch.uuid)
+def send_slack_notification(lunch):
     post("https://hooks.slack.com/services/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",
-         data={
-        "text": "Click on this link to choose a meal!",
-        "text_link": url
-    })
+         json={
+             "attachments": [
+                 {
+                     "title": "Great news, today you're going to " + lunch.chosen_restaurant.name,
+                     "title_link": "http://maps.google.com/?q="
+                                   +lunch.chosen_restaurant.name
+                                   +"+"+
+                                   lunch.chosen_restaurant.postcode
+                 }
+             ]
+        })
 
 
 # ===== Client -> Server =====
@@ -125,6 +131,7 @@ def on_eat(message):
 
     send_chosen_restaurant(lunch, broadcast=True)
     # TODO @Zoli Send Slack message
+    send_slack_notification(lunch)
 
 
 @app.after_request
