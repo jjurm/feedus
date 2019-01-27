@@ -1,6 +1,8 @@
 from flask import Flask, send_file, send_from_directory
 from flask.json import jsonify
 from flask_socketio import SocketIO, emit
+from requests import post
+
 
 from lunch import *
 from constants import *
@@ -34,6 +36,19 @@ def new_lunch():
             }
         ]
     }
+
+    resp = post("https://hooks.slack.com/services/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",
+         data={
+             "attachments": [
+            {
+                "title": "Click here to vote for today's lunch!",
+                "title_link": url
+            }
+        ]
+    })
+
+    print(resp)
+
     return jsonify(response)
 
 
@@ -58,6 +73,14 @@ def send_restaurants(lunch):
 
 def send_chosen_restaurant(lunch, broadcast):
     emit('chosen', lunch.chosen_restaurant, broadcast=broadcast)
+
+def send_slack_notification(lunch, restaurant):
+    url = "https://feed.us/" + str(lunch.uuid)
+    post("https://hooks.slack.com/services/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",
+         data={
+        "text": "Click on this link to choose a meal!",
+        "text_link": url
+    })
 
 
 # ===== Client -> Server =====
