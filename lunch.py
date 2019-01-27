@@ -149,3 +149,6 @@ class Lunch:
 
     def choose_restaurant(self, restaurant_id):
         self.chosen_restaurant = next(restaurant for restaurant in self.restaurants if restaurant.id == restaurant_id)
+
+    def filter_by_preference(self, types, cuisines):
+        return [meal for meal in [r.meals for r in restaurants if (r.get_cuisine() in cuisines)] if (meal.type in types)]

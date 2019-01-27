@@ -104,6 +104,10 @@ def on_get_lunch(message):
     else:
         send_chosen_restaurant(lunch, broadcast=False)
 
+@socketio.on('get_pref_lunch', namespace=WS_NAMESPACE)
+def on_get_preference_lunch(message):
+    lunch = lunches[message.lunch]
+    emit('menus', lunch.filter_by_preference(lunch.types, lunch.cuisines))
 
 @socketio.on('vote', namespace=WS_NAMESPACE)
 def on_vote(message):
