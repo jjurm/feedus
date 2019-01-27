@@ -52,7 +52,6 @@ def classify_meal(meal, category):
 
 class Meal:
     def __init__(self, name, category):
-        # dict.__init__(self, name=name)
         self.name = name
         self.category = category
         self.type = classify_meal(name, category)
@@ -61,13 +60,13 @@ class Meal:
 class Restaurant:
     distance_mins = None
 
-    def __init__(self, id, name, image, location, rating, meals):
-        # dict.__init__(self, id=id, name=name, image=image, location=location, rating=rating, meals=meals)
+    def __init__(self, id, name, image, location, rating, tags, meals):
         self.id = id
         self.name = name
         self.image = image
         self.location = location
         self.rating = rating
+        self.tags = tags
         self.meals = meals
 
     def fetch_distance(self):
@@ -118,6 +117,8 @@ class Lunch:
                 if category_allowed(categories[meal["category_id"]])
                    and meal_allowed(meal["name"]) and meal["raw_price"] > 0
             ]
+            menu_tags = [tag["name"] for tag in data["restaurant"]["menu"]["menu_tags"]
+                         if len(tag["name"].split(" ")) <= 1]
 
             def rating(data):
                 if "percentage_rating" in data:
@@ -126,7 +127,7 @@ class Lunch:
                 return 0
 
             restaurant = Restaurant(entry["id"], attr["name"], attr["image_url"], data["restaurant"]["post_code"],
-                                    rating(data), meals)
+                                    rating(data), menu_tags, meals)
             restaurants.append(restaurant)
 
         self.restaurants = restaurants
