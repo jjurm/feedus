@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Section, Container, Button} from "react-bulma-components";
 import 'react-bulma-components/dist/react-bulma-components.min.css';
 import PropTypes from 'prop-types';
+import { withRouter, Redirect } from 'react-router-dom';
 
 class SubmitComponent extends Component {
   constructor(props) {
@@ -10,6 +11,19 @@ class SubmitComponent extends Component {
         title: ""
       };
   }
+
+  button = withRouter(({ history }) => (
+    <button
+      type='button'
+      onClick={() => { 
+          if(this.props.name="submitInitial") history.push('/vote')
+          else history.push('/final');
+      }}>
+
+      Click Me!
+    </button>
+  ))
+
   render() {
     return (
         <Section>
