@@ -4,6 +4,7 @@ from flask_socketio import SocketIO, emit
 from requests import post
 from htmls import *
 from htmls2 import *
+from multiprocessing import Pool
 
 from lunch import *
 from constants import *
@@ -14,7 +15,10 @@ app.json_encoder = ClassJSONEncoder
 socketio = SocketIO(app)
 lunches = {}
 
+pool = Pool(processes=1)
+
 WS_NAMESPACE = "/ws"
+WEBHOOK = "https://hooks.slack.com/services/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"
 
 office_postcode = get_postcode(OFFICE_LOCATION)
 office_deliveroo_url = get_deliveroo_url(office_postcode)
@@ -38,17 +42,32 @@ def images(image):
 @app.route('/new', methods=['GET', 'POST'])
 def new_lunch():
     lunch = Lunch(OFFICE_LOCATION)
-    lunches[lunch.uuid] = lunch
-
-    lunch.fetch_restaurants(office_postcode)
 
     url = "http://feedus.hackkosice.com:5000/lunch-" + str(lunch.uuid)
+
+    def when_done(lunch):
+        lunches[lunch.uuid] = lunch
+        print("Finished fetching restaurants: " + str(len(lunches[next(iter(lunches))].restaurants)))
+
+        post(WEBHOOK,
+             json={
+                 "attachments": [
+                     {
+                         "title": "Accumulated menus for today are ready",
+                     },
+                     {
+                         "title": "Click here to vote for today's lunch!",
+                         "title_link": url
+                     }
+                 ]
+             })
+
+    pool.apply_async(lunch.fetch_restaurants, [office_postcode], callback=when_done)
 
     response = {
         "attachments": [
             {
-                "title": "Click here to vote for today's lunch!",
-                "title_link": url
+                "title": "Fetching menus from restaurants. Please wait...",
             }
         ],
         "fetched": lunch.restaurants
@@ -79,16 +98,19 @@ def send_chosen_restaurant(lunch, broadcast):
     emit('chosen', lunch.chosen_restaurant, broadcast=broadcast)
 
 
-def send_slack_notification(lunch):
-    post("https://hooks.slack.com/services/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",
+def send_slack_notification(restaurant):
+    post(WEBHOOK,
          json={
              "attachments": [
                  {
-                     "title": "Great news, today you're going to " + lunch.chosen_restaurant.name,
+                     "title": "Great news, today you're going to " + restaurant.name,
                      "title_link": "http://maps.google.com/?q="
-                                   + lunch.chosen_restaurant.name
+                                   + restaurant.name
                                    + "+" +
-                                   lunch.chosen_restaurant.postcode
+                                   restaurant.location,
+                     "image_url": restaurant.image,
+                     "text": "Rating: " + str(restaurant.rating) + "%"
+
                  }
              ]
          })
@@ -119,6 +141,14 @@ def on_restaurants(lunch_id):
 
     rests = lunch.get_restaurants()
     return restaurants(lunch_id, rests)
+
+@app.route('/lunch-<lunch_id>-choose', methods=['GET', 'POST'])
+def on_restaurants_choose(lunch_id):
+    message = request.form.to_dict(flat=True)
+    lunch = lunches[lunch_id]
+    lunch.choose_restaurant(message["id"])
+    send_slack_notification(lunch.chosen_restaurant)
+    return lunch.chosen_restaurant.name
 
 
 @socketio.on('get_pref_lunch', namespace=WS_NAMESPACE)
@@ -157,7 +187,7 @@ def on_eat(message):
 
     send_chosen_restaurant(lunch, broadcast=True)
     # TODO @Zoli Send Slack message
-    send_slack_notification(lunch)
+    send_slack_notification(lunch.chosen_restaurant)
 
 
 @app.after_request

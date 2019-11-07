@@ -50,17 +50,12 @@ def restaurants(lunchid, restaurants):
                 <button tabindex="0" class="is-large is-block is-outlined button" style="height: auto;">
                     <div class="media-content" renderas="figure">
                         '''+restaurant.name+'''
-                    </div>
-                    <h2 class="subtitle"><strong>'''+str(restaurant.rating)+"% :)  •  "+str(restaurant.distance_mins)+"min"+'''</strong></h2></button>
+                    </div><div style="display:none" class="rest-id">'''+restaurant.id+'''</div>
+                    <h2 class="subtitle"><strong>'''+str(restaurant.rating)+"% :)"+'''</strong></h2></button>
             </center>
         </div>'''
 
     html += '''</div>
-            </div>
-        </section>
-        <section class="section">
-            <div class="container">
-                <button tabindex="0" class="is-danger is-fullwidth is-medium is-outlined button">Submit</button>
             </div>
         </section>
     </div>
@@ -97,18 +92,12 @@ def restaurants(lunchid, restaurants):
 
     $(function () {
         $("button").on("click", function(){
-            $(this).toggleClass("is-active");
-        })
-        $("button").last().on("click", function () {
-            btns = $("button");
-            meals = []
-            for (var i = 0; i < btns.length-1; i++) {
-                if ($(btns[i]).hasClass("is-active")) {
-                    meals.push($.trim($(btns[i]).text()))
-                }
-            }
-            post("lunch-" + "'''+lunchid+'''" + "-restaurants", {
-                meals: meals.join("$")
+            id = $(this).find("div.rest-id").text();
+            $.ajax({
+                  type: 'POST',
+                  url: "lunch-" + "'''+lunchid+'''" + "-choose",
+                  data: {id: id},
+                  success: function(resultData) {console.log(resultData)}
             });
         })
     });

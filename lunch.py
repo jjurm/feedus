@@ -87,12 +87,12 @@ class Restaurant:
 
     def fetch_distance(self):
         client = googlemaps.Client("AIzaSyC2PBhrJSWh1isXPSln1vFbqRPRt6Tr1Rc")
-        origin = (OFFICE_LOCATION.latitude, OFFICE_LOCATION.longitude)
+        origin = [(OFFICE_LOCATION.latitude, OFFICE_LOCATION.longitude)]
         loc = (self.location.latitude, self.location.longitude)
         result = client.distance_matrix(origin, loc, mode="walking")
         ans = result['rows'][0]['elements']
         self.distance_mins = max(1, int(ans[0]['duration']['value']) // 60)
-        pass
+
     def fetch_cuisine(self):
        for i in self.tags:
           tag = i.lower()
@@ -141,6 +141,7 @@ class Lunch:
                 if category_allowed(categories[meal["category_id"]])
                    and meal_allowed(meal["name"]) and meal["raw_price"] > 0
             ]
+            print("Fetched "+str(len(meals))+ " meals")
             menu_tags = [tag["name"] for tag in data["restaurant"]["menu"]["menu_tags"]
                          if len(tag["name"].split(" ")) <= 1]
 
@@ -152,9 +153,11 @@ class Lunch:
 
             restaurant = Restaurant(entry["id"], attr["name"], attr["image_url"], data["restaurant"]["post_code"],
                                     rating(data), menu_tags, meals)
+            #restaurant.fetch_distance()
             restaurants.append(restaurant)
 
         self.restaurants = restaurants
+        return self
 
     def vote_meals(self, meals):
         for meal in meals:
@@ -178,8 +181,9 @@ class Lunch:
         return sorted(self.restaurants, key=sortkey)
 
     def choose_restaurant(self, restaurant_id):
-        self.chosen_restaurant = next(restaurant for restaurant in self.restaurants if restaurant.id == restaurant_id)
+        self.chosen_restaurant = next(restaurant for restaurant in self.restaurants if str(restaurant.id) == str(restaurant_id))
 
     def filter_by_preference(self, types, cuisines):
         #return [meal for meal in [r.meals for r in self.restaurants if (r.get_cuisine() in cuisines)] if (meal.type in types)]
-        return [meal.__dict__ for r in self.restaurants for meal in r.meals if classify_meal(meal.name, meal.category) in types]
+        #return [meal.__dict__ for r in self.restaurants for meal in r.meals if classify_meal(meal.name, meal.category) in types]
+        return [meal.__dict__ for r in self.restaurants for meal in r.meals]
