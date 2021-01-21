@@ -34,7 +34,7 @@
     "classnames": "^2.2.6",
     "react-bulma-components": "^2.3.0",
     "react-router-dom": "^4.3.1",
-    "socket.io": "^2.2.0",
+    "socket.io": "^2.4.0",
     "socket.io-client": "^2.2.0"
   }
 }
